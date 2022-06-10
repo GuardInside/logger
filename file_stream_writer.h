@@ -2,7 +2,8 @@
 
 #include "stream_writer.h"
 
-#include "file.h"
+#include <fstream>
+#include <filesystem>
 
 namespace logger
 {
@@ -14,6 +15,15 @@ namespace logger
         void write(level, const char * text) override;
 
     private:
+        void make_log_file();
+        void make_log_dir() const;
+        std::string generate_file_name();
+
+    private:
+        std::filesystem::path _file_path;
+
+        uintmax_t _file_name_counter;
+
         std::fstream _fstream;
     };
 }

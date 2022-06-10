@@ -8,23 +8,25 @@ namespace
 {
     std::string time_stamp()
     {
+        // todo: const width
+
         const auto current_time = std::time(0);
         const auto tm = std::localtime(&current_time);
 
         return std::to_string(tm->tm_hour) + ':' + std::to_string(tm->tm_min) + ':' + std::to_string(tm->tm_sec) + '.' + std::to_string(0);
     }
 
-    std::string level_label(logger::level level)
+    std::string level_label(logger::level l)
     {
         using logger::level;
 
-        switch  (level)
+        switch  (l)
         {
-            case level::trace: return "Trace";
-            case level::debug: return "Debug";
-            case level::info: return "Info";
-            case level::warning: return "Warning";
-            case level::error: return "Error";
+            case level::trace: return "trace";
+            case level::debug: return "debug";
+            case level::info: return "info";
+            case level::warning: return "warning";
+            case level::error: return "error";
         }
 
         return {};
@@ -57,7 +59,7 @@ void logger::logger::set_out_device(out_device out_device)
 
     if ((int)out_device & (int)out_device::file)
     {
-        _console_writer = std::make_unique<file_stream_writer>();
+        _file_writer = std::make_unique<file_stream_writer>();
     }
 }
 

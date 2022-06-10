@@ -1,14 +1,15 @@
-#include "ConsoleStreamWriter.h"
-#include <cstdio>
+#include "console_stream_writer.h"
 
-#if defined (Q_OS_WIN)
+#include <iostream>
+
+#if defined (OS_WIN)
 #include <windows.h>
 #endif
 
 namespace {
     enum class Color
     {
-        #if defined (Q_OS_WIN)
+        #if defined (OS_WIN)
         FG_RED      = FOREGROUND_RED,
         FG_GREEN    = FOREGROUND_GREEN,
         FG_YELLOW   = FG_RED | FG_GREEN,
@@ -34,7 +35,7 @@ namespace {
         DEFAULT = FG_YELLOW | FG_BLUE
         #endif
 
-        #if defined (Q_OS_LINUX)
+        #if defined (OS_LINUX)
         FG_RED      = 31,
         FG_GREEN    = 32,
         FG_YELLOW   = 33,
@@ -61,50 +62,47 @@ namespace {
         #endif
     };
 
-    QTextStream& operator<< (QTextStream& os, const Color& color)
+    std::ostream& operator<< (std::ostream& os, const Color& color)
     {
-        #if defined (Q_OS_WIN)
-        Q_UNUSED(os)
+        #if defined (OS_WIN)
         SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), static_cast<WORD>(color));
         #endif
 
-        #if defined (Q_OS_LINUX)
+        #if defined (OS_LINUX)
         return os << "\033[" << color << "m";
         #endif
 
         return os;
     }
+
+    Color text_color(logger::level l)
+    {
+        using logger::level;
+
+        switch (l)
+        {
+            case level::trace:
+                return Color::FG_BRIGHT_BLUE;
+            case level::debug:
+                return Color::FG_BRIGHT_WHITE;
+            case level::info:
+                return Color::FG_BRIGHT_YELLOW;
+            case level::warning:
+                return Color::FG_YELLOW;
+            case level::error:
+                return Color::FG_BRIGHT_RED;
+        }
+
+        return Color::DEFAULT;
+    }
 }
 
-ConsoleStreamWriter::ConsoleStreamWriter()
-    : cstream(stdout)
+logger::console_stream_writer::console_stream_writer()
 {
     ;
 }
 
-void ConsoleStreamWriter::write(ILogger::LogLevel logLevel, const QString &msg)
+void logger::console_stream_writer::write(level level, const char *text)
 {
-    setColor(logLevel);
-    cstream << msg << endl << Color::DEFAULT;
-}
-
-void ConsoleStreamWriter::setColor(ILogger::LogLevel logLevel)
-{
-    switch( logLevel )
-    {
-        case ILogger::Trace:
-            cstream << Color::FG_BRIGHT_BLUE; break;
-        case ILogger::Debug:
-            cstream << Color::FG_BRIGHT_WHITE; break;
-        case ILogger::Info:
-            cstream << Color::FG_BRIGHT_YELLOW; break;
-        case ILogger::Warning:
-            cstream << Color::FG_YELLOW; break;
-        case ILogger::Error:
-            cstream << Color::FG_BRIGHT_RED; break;
-        case ILogger::Fatal:
-            cstream << Color::FG_RED; break;
-        default:
-            cstream << Color::DEFAULT; break;
-    }
+    std::cout << text_color(level) << text << std::endl << Color::DEFAULT;
 }
